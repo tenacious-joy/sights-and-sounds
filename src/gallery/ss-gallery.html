@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../shared-styles.html">
+<link rel="import" href="../../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html">
+<link rel="import" href="../../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-storage-ref.html">
+<link rel="import" href="../../bower_components/polymerfire/firebase-query.html">
+
+<link rel="import" href="../../bower_components/sl-gallery/sl-gallery.html">
+
+<dom-module id="ss-gallery">
+    <template>
+        <style include="app-grid-style shared-styles ">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+
+            figure {
+                --app-grid-columns: 1;
+            }
+ 
+        </style>
+
+        <div class="card">
+
+            <h1>Gallery</h1>
+
+            <firebase-query app="{{fbApp}}"
+                path="/photos"
+                data="{{photoList}}">
+            </firebase-query>
+            
+            <app-localstorage-document key="photoDocument" data="{{cachedPhotoList}}">
+
+            </app-localstorage-document>
+
+            <sl-gallery>
+                <template is="dom-repeat" items="{{cachedPhotoList}}" as="photoObj">
+
+                    <sl-gallery-image src="{{photoObj.url}}"></sl-gallery-image>
+
+                </template>
+            </sl-gallery>
+
+        </div>
+    </template>
+
+    <script>
+        class Gallery extends Polymer.Element {
+            static get is() {
+                return 'ss-gallery';
+            }
+
+            static get properties() {
+                return {
+                    fbApp: Object,
+                    photoList: {
+                        type: Object,
+                        observer: 'photoDataChanged'
+                    },
+                    cachedPhotoList: {
+                        type: Object,
+                        notify: true
+                    }
+                    
+                };
+            }
+
+            ready() {
+                super.ready();
+            }
+
+            photoDataChanged(newData, oldData) {
+
+                if (newData && newData.length > 0) {
+                    this.set('cachedPhotoList', newData);
+                }
+
+            }
+
+        }
+
+        window.customElements.define(Gallery.is, Gallery);
+    </script>
+</dom-module>

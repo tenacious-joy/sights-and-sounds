@@ -1,0 +1,342 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-styles/default-theme.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/image-icons.html">
+<link rel="import" href="../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../bower_components/iron-icons/social-icons.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+
+<!-- <link rel="import" href="../bower_components/paper-item/paper-icon-item.html"> -->
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+
+<link rel="import" href="network/ss-network-status.html">
+<link rel="import" href="network/ss-login-status.html">
+<link rel="import" href="network/ss-avatar.html">
+
+<link rel="lazy-import" href="about/ss-about.html">
+<link rel="lazy-import" href="landmarks/ss-landmarks.html">
+<link rel="lazy-import" href="memories/ss-memories.html">
+<link rel="lazy-import" href="gallery/ss-gallery.html">
+
+
+<link rel="lazy-import" href="404/ss-404.html">
+
+<dom-module id="ss-app">
+    <template>
+        <style>
+            :host {
+                --app-primary-color: #4285f4;
+                --app-secondary-color: black;
+
+                display: block;
+            }
+
+            app-drawer {
+                --app-drawer-content-container: {
+                    background-color: #eee;
+                }
+            }
+
+            app-drawer-layout:not([narrow]) [drawer-toggle] {
+                display: none;
+            }
+
+            app-header {
+                color: #fff;
+                background-color: var(--app-primary-color);
+            }
+
+            app-header paper-icon-button {
+                --paper-icon-button-ink-color: white;
+            }
+
+            .drawer-list {
+                margin: 0 20px;
+            }
+
+            .drawer-list a {
+                display: block;
+                padding: 8px 16px;
+                text-decoration: none;
+                color: var(--app-secondary-color);
+                line-height: 40px;
+            }
+
+            .drawer-list a.iron-selected {
+                background-color: #d1d1d1;
+            }
+
+            .drawer-list a paper-icon-item iron-icon {
+                padding-right: 10px;
+            }
+
+            #router-outlet {}
+
+
+            #tabsForMenu {
+                min-width: 70%;
+                text-transform: uppercase;
+            }
+
+            #appLogo {
+                height: 2em;
+                margin-right: 1em;
+            }
+
+            #avatar {
+                min-height: 5em;
+                padding-top: 3em;
+                background-color: gray; /* #4285F4; */
+                color: white;
+                min-width: 86%;
+            }
+
+            app-header-layout:-webkit-full-screen-ancestor app-header,
+            app-header-layout:-webkit-full-screen-ancestor app-drawer {
+                z-index: -1 !important;
+            }
+        </style>
+
+        <iron-media-query query="min-width: 1000" query-matches="{{wideLayout}}"></iron-media-query>
+
+        <app-location route="{{route}}" url-space-regex="^[[rootPath]]">
+        </app-location>
+
+        <app-route route="{{route}}" pattern="[[rootPath]]:page" data="{{routeData}}" tail="{{subroute}}">
+        </app-route>
+
+
+        <!-- Main content -->
+        <app-header-layout fullbleed>
+
+            <app-header slot="header" fixed effects="waterfall">
+                <app-toolbar>
+                    <paper-icon-button hidden$="{{wideLayout}}" icon="menu" on-tap="_onTap" drawer-toggle></paper-icon-button>
+                    <div main-title>Sights &amp; Sounds</div>
+                    <ss-network-status></ss-network-status>
+                    <ss-login-status id='loginStatus' signed-in="[[signedIn]]"></ss-login-status>
+                </app-toolbar>
+
+            </app-header>
+
+            <app-drawer-layout id="drawerLayout" narrow="{{narrow}}" force-narrow="true">
+                <!-- Drawer content -->
+                <app-drawer id="drawer" slot="drawer" swipe-open="[[narrow]]">
+                    <app-toolbar id="avatar">
+                        <ss-avatar id="avatarButton" user="[[user]]" signed-in="[[signedIn]]" show-name="true"></ss-avatar>
+                    </app-toolbar>
+                    <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+
+
+                        <a href="[[rootPath]]memories" name="memories" tabindex="-1">
+                            <paper-icon-item>
+                                <iron-icon icon="image:camera-alt" slot="item-icon"></iron-icon>
+                                <span>Memories</span>
+                            </paper-icon-item>
+                        </a>
+
+                        <a href="[[rootPath]]gallery" name="gallery" tabindex="-1">
+                            <paper-icon-item>
+                                <iron-icon icon="image:collections" slot="item-icon"></iron-icon>
+                                <span>Gallery</span>
+                            </paper-icon-item>
+                        </a>
+
+                        <a href="[[rootPath]]landmarks" name="landmarks" tabindex="-1">
+                            <paper-icon-item>
+                                <iron-icon icon="explore" slot="item-icon"></iron-icon>
+                                <span>Landmarks</span>
+                            </paper-icon-item>
+                        </a>
+
+
+                        <a href="[[rootPath]]about" name="about" tabindex="-1">
+                            <paper-icon-item>
+                                <iron-icon icon="maps:local-florist" slot="item-icon"></iron-icon>
+                                <span>About</span>
+                            </paper-icon-item>
+                        </a>
+
+                    </iron-selector>
+                </app-drawer>
+                <iron-pages id="router-outlet" selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
+                    <ss-memories name="memories" fb-app="{{fbApp}}" user="{{user}}"></ss-memories>
+                    <ss-gallery name="gallery" fb-app="{{fbApp}}" user="{{user}}"></ss-gallery>
+                    <ss-landmarks name="landmarks"></ss-landmarks>
+                    <ss-about name="about"></ss-about>
+                    <ss-404 name="404"></ss-404>
+                </iron-pages>
+
+            </app-drawer-layout>
+
+
+        </app-header-layout>
+
+        <firebase-app
+                app="{{fbApp}}"
+                name="sites-sounds-pwa"
+                api-key="AIzaSyB67jjPo7VcqMiReThraBjLaggU8OXIOsQ"
+                auth-domain="sights-sounds-pwa.firebaseapp.com"
+                database-url="https://sights-sounds-pwa.firebaseio.com"
+                storage-bucket="sights-sounds-pwa.appspot.com">
+        </firebase-app>
+
+        <firebase-auth
+                id="auth"
+                app-name="sites-sounds-pwa"
+                provider="google"
+                signed-in="{{signedIn}}"
+                user="{{user}}">
+            >
+        </firebase-auth>
+        
+
+    </template>
+
+    <script>
+        class SightsSoundsApp extends Polymer.Element {
+            static get is() {
+                return 'ss-app';
+            }
+
+            static get properties() {
+                return {
+                    wideLayout: Boolean,
+                    page: {
+                        type: String,
+                        reflectToAttribute: true,
+                        observer: '_pageChanged',
+                        value: 'gallery',
+                    },
+                    routeData: Object,
+                    subroute: String,
+                    // This shouldn't be neccessary, but the Analyzer isn't picking up
+                    // Polymer.Element#rootPath
+                    rootPath: String,
+                    signedIn: Boolean,
+                    user: {
+                        type: Object,
+                        notify: true
+                    },
+                    fbApp: {
+                        type: Object,
+                        notify: true
+                    }
+                };
+            }
+
+            static get observers() {
+                return [
+                    '_routePageChanged(routeData.page)',
+                ];
+            }
+
+            ready() {
+                super.ready();
+                this.setupLoginListeners();
+            }
+
+            setupLoginListeners() {
+                var self = this;
+                this.$.loginStatus.addEventListener('start-sign-in', this.signIn.bind(self));
+                this.$.loginStatus.addEventListener('start-sign-out', this.signOut.bind(self));
+                this.$.avatarButton.addEventListener('start-sign-in', this.signIn.bind(self));
+                this.$.avatarButton.addEventListener('start-sign-out', this.signOut.bind(self));
+            }
+
+            signIn() {
+ 
+                this.$.auth.signInWithPopup()
+                    .then(function (response) {
+                        console.log('Login complete');
+                        console.log(response.user);
+                    }).catch(function (error) {
+                    console.error(error);
+                });
+            }
+ 
+            signOut() {
+                console.log('Logout');
+                this.$.auth.signOut();
+            }
+ 
+
+           
+            _routePageChanged(page) {
+                // If no page was found in the route data, page will be an empty string.
+                // Default to 'view1' in that case.
+                this.page = page || 'gallery';
+
+                // Close a non-persistent drawer when the page & route are changed.
+                if (!this.$.drawer.persistent) {
+                    this.$.drawer.close();
+                }
+            }
+
+            _pageChanged(page) {
+                // Load page import on demand. Show 404 page if fails
+                var resolvedPageUrl = this.resolveUrl(page + '/ss-' + page + '.html');
+                console.log(page);
+                Polymer.importHref(
+                    resolvedPageUrl,
+                    null,
+                    this._showPage404.bind(this),
+                    true);
+            }
+
+            _onTap() {
+                // Fix to expand content layout on collapse
+                // https://stackoverflow.com/questions/45890756/polymer-app-drawer-left-hanging-wrapper-when-closed-content-not-take-up-all-sp
+                var drawerLayout = this.$.drawerLayout;
+                if (drawerLayout.forceNarrow || !drawerLayout.narrow) {
+                    drawerLayout.forceNarrow = !drawerLayout.forceNarrow;
+                } else {
+                    drawerLayout.drawer.toggle();
+                }
+            }
+
+            _showPage404() {
+                this.page = '404';
+            }
+        }
+
+        window.customElements.define(SightsSoundsApp.is, SightsSoundsApp);
+    </script>
+</dom-module>

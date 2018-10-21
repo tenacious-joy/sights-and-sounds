@@ -1,0 +1,177 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../shared-styles.html">
+<link rel="import" href="../../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-grid/app-grid-style.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/l2t-paper-rating/l2t-paper-rating.html">
+<link rel="import" href="../../bower_components/google-chart/google-chart.html">
+
+<dom-module id="ss-about">
+    <template>
+        <style include="app-grid-style shared-styles ">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+
+            figure { 
+                --app-grid-columns: 1; 
+            } 
+ 
+
+            #logo {
+                width: 100%;
+            }
+
+            paper-button { 
+                margin: 5px; 
+            } 
+
+            l2t-paper-rating {
+                display:block; 
+                margin: 0 auto; 
+                text-align: center; 
+                padding-bottom: 2em;
+            }
+
+            google-chart {
+                width: 100%;
+                padding-top: 2em;
+                padding-bottom: 2em;
+            }
+ 
+        </style>
+
+        <div class="card">
+
+            <img id="logo" src="./images/sights-sounds-logo.svg"/>
+
+            <l2t-paper-rating rating="{{ starRating }}"></l2t-paper-rating>
+            
+
+            <paper-button raised class="indigo" on-click="resetRating">
+                <iron-icon icon="icons:star"></iron-icon>
+                Reset Rating
+            </paper-button>
+
+            <paper-button raised class="pink" on-click="notifyBatteryLife" >
+                <iron-icon icon="icons:alarm"></iron-icon>
+                Notify Battery Life
+            </paper-button>
+
+            <google-chart
+                type='gauge'
+                data='[[batteryChartData]]'>
+                </google-chart>
+
+
+            <div hidden$="[[!charging]]">Charged in [[chargingTimeMinutes]] minutes</div>
+
+            <div hidden$="[[charging]]">Discharged in [[dischargingTimeMinutes]] minutes</div>
+            
+
+        </div>
+    </template>
+
+    <script>
+        class About extends Polymer.Element {
+            static get is() {
+                return 'ss-about';
+            }
+
+            static get properties() {
+                return {
+                    starRating: {
+                        type: Number,
+                        value: 5
+                    },
+                    batteryLevel: Number,
+                    batteryChartData: {
+                        type: Object,
+                        computed: 'computeChartData(batteryLevel)'
+                    },
+                    charging: Boolean,
+                    chargingTimeMinutes: Number,
+                    dischargingTimeMinutes: Number,
+                    
+                };
+            }
+
+            ready() {
+                super.ready();
+                this.readBatteryStatus();
+            }
+
+            computeChartData(batteryLevel) {
+                console.log("Computing based on battery level of ", batteryLevel);
+                return [
+                    ["Label", "Value"], 
+                    ["Battery", batteryLevel * 100]
+                ];
+            }
+
+            readBatteryStatus() {
+                
+                if ('getBattery' in navigator) {
+                   navigator.getBattery().then( (batteryManager) => {
+                       console.log(batteryManager);
+                       this.set('batteryLevel', batteryManager.level);
+                       this.set('charging', batteryManager.charging);
+                       this.set('chargingTimeMinutes', Number.isFinite(batteryManager.chargingTime) ? batteryManager.chargingTime / 60 : 0);
+                       this.set('dischargingTimeMinutes', Number.isFinite(batteryManager.dischargingTime) ? batteryManager.dischargingTime / 60 : 0);
+                       
+
+                       batteryManager.onlevelchange = () => {
+                            this.set('batteryLevel', batteryManager.level);
+                       };
+                       batteryManager.onchargingchange = () => {
+                            this.set('charging', batteryManager.charging);
+                       };
+                       batteryManager.onchargingtimechange = () => {
+                           this.set('chargingTimeMinutes', batteryManager.chargingTime / 60);
+                       };
+                       batteryManager.ondischargingtimechange = () => {
+                            let minutesLeft = batteryManager.dischargingTime / 60;
+                            this.set('dischargingTimeMinutes', minutesLeft);
+                            if (minutesLeft < 30) {
+                                this.showBatteryLifeNotification(minutesLeft);
+                            }
+                       };
+                   });
+                } else {
+                    this.set('batteryLevel', 100);
+                }
+
+            }
+
+            resetRating() {
+                this.set('starRating', 5);
+            }
+
+            notifyBatteryLife() {
+                const minutesLeft = this.get('dischargingTimeMinutes');
+                this.showBatteryLifeNotification(minutesLeft);
+            }
+
+            showBatteryLifeNotification(minutes) {
+                const title = `Battery Low`;
+                const options = {
+                    body: `Only ${minutes} minutes of battery remaining`,
+                    icon: '/sights-sounds-pwa/images/manifest/icon-512x512.png',
+                    vibrate: [100,50,100,50,200]
+                };
+                
+                Notification.requestPermission(result => {
+                    if (result === 'granted') {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification(title, options);
+                        });
+                    }
+                });
+            }
+        }
+
+        window.customElements.define(About.is, About);
+        
+    </script>
+</dom-module>

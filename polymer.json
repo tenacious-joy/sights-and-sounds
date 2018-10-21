@@ -1,0 +1,29 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/ss-app.html",
+  "fragments": [
+    "src/memories/ss-memories.html",
+    "src/landmarks/ss-landmarks.html",
+    "src/404/ss-404.html"
+  ],
+  "sources": [
+    "src/**/*",
+    "images/**/*"
+  ],
+  "extraDependencies": [
+    "manifest.json",
+    "bower_components/webcomponentsjs/*.js"
+  ],
+  "lint": {
+    "rules": ["polymer-2"]
+  },
+  "builds": [
+    {
+      "preset": "es5-bundled",
+      "basePath": "/sights-sounds-pwa/"
+    },
+    {
+      "preset": "es6-bundled"
+    }
+  ]
+}
